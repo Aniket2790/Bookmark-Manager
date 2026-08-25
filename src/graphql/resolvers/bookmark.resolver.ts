@@ -1,4 +1,11 @@
 import type { Context } from "../context";
+import { AppError } from "../errors";
+import {
+  validateBookmarkTags,
+  validateBookmarkTitle,
+  validateBookmarkUrl,
+} from "../validators/bookmark.validator";
+import { validateFirst } from "../validators/pagination.validator";
 
 export const bookmarkResolvers = {
   Query: {
@@ -10,7 +17,7 @@ export const bookmarkResolvers = {
       },
       context: Context
     ) => {
-      const first = args.first ?? 10;
+      const first = validateFirst(args.first);
 
       const bookmarks = await context.prisma.bookmark.findMany({
         take: first + 1,
@@ -35,7 +42,7 @@ export const bookmarkResolvers = {
         ? bookmarks.slice(0, first)
         : bookmarks;
 
-  const endCursor = nodes.at(-1)?.id ?? null;
+      const endCursor = nodes.at(-1)?.id ?? null;
 
       return {
         nodes,
@@ -51,15 +58,24 @@ export const bookmarkResolvers = {
       args: { id: string },
       context: Context
     ) => {
-      return context.prisma.bookmark.findUnique({
+      const bookmark = await context.prisma.bookmark.findUnique({
         where: {
           id: args.id,
         },
       });
+
+      if (!bookmark) {
+        throw new AppError(
+          "Bookmark not found",
+          "NOT_FOUND"
+        );
+      }
+
+      return bookmark;
     },
   },
 
-   Mutation: {
+  Mutation: {
     createBookmark: async (
       _parent: unknown,
       args: {
@@ -70,11 +86,28 @@ export const bookmarkResolvers = {
       },
       context: Context
     ) => {
+      const title = validateBookmarkTitle(args.title);
+      const url = validateBookmarkUrl(args.url);
+      const tags = validateBookmarkTags(args.tags);
+
+      const folder = await context.prisma.folder.findUnique({
+        where: {
+          id: args.folderId,
+        },
+      });
+
+      if (!folder) {
+        throw new AppError(
+          "Folder not found",
+          "NOT_FOUND"
+        );
+      }
+
       return context.prisma.bookmark.create({
         data: {
-          title: args.title,
-          url: args.url,
-          tags: args.tags ?? [],
+          title,
+          url,
+          tags,
           folderId: args.folderId,
         },
       });
@@ -91,27 +124,60 @@ export const bookmarkResolvers = {
       },
       context: Context
     ) => {
+      const bookmark = await context.prisma.bookmark.findUnique({
+        where: {
+          id: args.id,
+        },
+      });
+
+      if (!bookmark) {
+        throw new AppError(
+          "Bookmark not found",
+          "NOT_FOUND"
+        );
+      }
+
+      const data: {
+        title?: string;
+        url?: string;
+        tags?: string[];
+        folderId?: string;
+      } = {};
+
+      if (args.title !== undefined) {
+        data.title = validateBookmarkTitle(args.title);
+      }
+
+      if (args.url !== undefined) {
+        data.url = validateBookmarkUrl(args.url);
+      }
+
+      if (args.tags !== undefined) {
+        data.tags = validateBookmarkTags(args.tags);
+      }
+
+      if (args.folderId !== undefined) {
+        const folder = await context.prisma.folder.findUnique({
+          where: {
+            id: args.folderId,
+          },
+        });
+
+        if (!folder) {
+          throw new AppError(
+            "Folder not found",
+            "NOT_FOUND"
+          );
+        }
+
+        data.folderId = args.folderId;
+      }
+
       return context.prisma.bookmark.update({
         where: {
           id: args.id,
         },
-        data: {
-          ...(args.title !== undefined && {
-            title: args.title,
-          }),
-
-          ...(args.url !== undefined && {
-            url: args.url,
-          }),
-
-          ...(args.tags !== undefined && {
-            tags: args.tags,
-          }),
-
-          ...(args.folderId !== undefined && {
-            folderId: args.folderId,
-          }),
-        },
+        data,
       });
     },
 
@@ -120,6 +186,19 @@ export const bookmarkResolvers = {
       args: { id: string },
       context: Context
     ) => {
+      const bookmark = await context.prisma.bookmark.findUnique({
+        where: {
+          id: args.id,
+        },
+      });
+
+      if (!bookmark) {
+        throw new AppError(
+          "Bookmark not found",
+          "NOT_FOUND"
+        );
+      }
+
       await context.prisma.bookmark.delete({
         where: {
           id: args.id,
@@ -129,18 +208,27 @@ export const bookmarkResolvers = {
       return true;
     },
   },
-  
+
   Bookmark: {
-    folder: (
+    folder: async (
       parent: { folderId: string },
       _args: unknown,
       context: Context
     ) => {
-      return context.prisma.folder.findUnique({
+      const folder = await context.prisma.folder.findUnique({
         where: {
           id: parent.folderId,
         },
       });
+
+      if (!folder) {
+        throw new AppError(
+          "Folder not found",
+          "NOT_FOUND"
+        );
+      }
+
+      return folder;
     },
   },
 };
