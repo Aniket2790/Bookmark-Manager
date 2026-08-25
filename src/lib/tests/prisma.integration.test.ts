@@ -62,6 +62,21 @@ describe("PostgreSQL integration", () => {
     expect(foundBookmark?.id).toBe(bookmarkId);
   });
 
+  test("searches bookmarks by title substring", async () => {
+    const matches = await prisma.bookmark.findMany({
+      where: {
+        folderId,
+        title: {
+          contains: "Integration Test",
+          mode: "insensitive",
+        },
+      },
+    });
+
+    expect(matches.length).toBeGreaterThan(0);
+    expect(matches[0]?.id).toBe(bookmarkId);
+  });
+
   test("deletes bookmark and folder", async () => {
     await prisma.bookmark.delete({
       where: {

@@ -10,9 +10,10 @@ export const folderResolvers = {
       context: Context
     ) => {
       return context.prisma.folder.findMany({
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: [
+          { createdAt: "desc" },
+          { id: "desc" },
+        ],
       });
     },
 
@@ -121,9 +122,10 @@ export const folderResolvers = {
         where: {
           folderId: parent.id,
         },
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: [
+          { createdAt: "desc" },
+          { id: "desc" },
+        ],
       });
     },
   },
