@@ -1,25 +1,25 @@
 import type { Context } from "../context";
 
-export const folderResolvers = {
+export const bookmarkResolvers = {
   Query: {
-    folders: async (
+    bookmarks: async (
       _parent: unknown,
       _args: unknown,
       context: Context
     ) => {
-      return context.prisma.folder.findMany({
+      return context.prisma.bookmark.findMany({
         orderBy: {
           createdAt: "desc",
         },
       });
     },
 
-    folder: async (
+    bookmark: async (
       _parent: unknown,
       args: { id: string },
       context: Context
     ) => {
-      return context.prisma.folder.findUnique({
+      return context.prisma.bookmark.findUnique({
         where: {
           id: args.id,
         },
@@ -27,18 +27,15 @@ export const folderResolvers = {
     },
   },
 
-  Folder: {
-    bookmarks: (
-      parent: { id: string },
+  Bookmark: {
+    folder: (
+      parent: { folderId: string },
       _args: unknown,
       context: Context
     ) => {
-      return context.prisma.bookmark.findMany({
+      return context.prisma.folder.findUnique({
         where: {
-          folderId: parent.id,
-        },
-        orderBy: {
-          createdAt: "desc",
+          id: parent.folderId,
         },
       });
     },

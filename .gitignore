@@ -6,6 +6,11 @@ out/
 dist/
 *.tgz
 
+# AI/editor configuration
+.agents/
+.claude/
+.windsurf/
+
 # code coverage
 coverage/
 *.lcov
