@@ -59,6 +59,77 @@ export const bookmarkResolvers = {
     },
   },
 
+   Mutation: {
+    createBookmark: async (
+      _parent: unknown,
+      args: {
+        title: string;
+        url: string;
+        tags?: string[];
+        folderId: string;
+      },
+      context: Context
+    ) => {
+      return context.prisma.bookmark.create({
+        data: {
+          title: args.title,
+          url: args.url,
+          tags: args.tags ?? [],
+          folderId: args.folderId,
+        },
+      });
+    },
+
+    updateBookmark: async (
+      _parent: unknown,
+      args: {
+        id: string;
+        title?: string;
+        url?: string;
+        tags?: string[];
+        folderId?: string;
+      },
+      context: Context
+    ) => {
+      return context.prisma.bookmark.update({
+        where: {
+          id: args.id,
+        },
+        data: {
+          ...(args.title !== undefined && {
+            title: args.title,
+          }),
+
+          ...(args.url !== undefined && {
+            url: args.url,
+          }),
+
+          ...(args.tags !== undefined && {
+            tags: args.tags,
+          }),
+
+          ...(args.folderId !== undefined && {
+            folderId: args.folderId,
+          }),
+        },
+      });
+    },
+
+    deleteBookmark: async (
+      _parent: unknown,
+      args: { id: string },
+      context: Context
+    ) => {
+      await context.prisma.bookmark.delete({
+        where: {
+          id: args.id,
+        },
+      });
+
+      return true;
+    },
+  },
+  
   Bookmark: {
     folder: (
       parent: { folderId: string },

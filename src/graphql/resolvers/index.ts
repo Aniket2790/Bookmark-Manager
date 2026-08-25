@@ -6,6 +6,10 @@ export const resolvers = {
     ...folderResolvers.Query,
     ...bookmarkResolvers.Query,
   },
+   Mutation: {
+    ...folderResolvers.Mutation,
+    ...bookmarkResolvers.Mutation,
+  },
 
   Folder: {
     ...folderResolvers.Folder,

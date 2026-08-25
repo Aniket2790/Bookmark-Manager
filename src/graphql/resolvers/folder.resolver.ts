@@ -27,6 +27,49 @@ export const folderResolvers = {
     },
   },
 
+    Mutation: {
+    createFolder: async (
+      _parent: unknown,
+      args: { name: string },
+      context: Context
+    ) => {
+      return context.prisma.folder.create({
+        data: {
+          name: args.name,
+        },
+      });
+    },
+
+    updateFolder: async (
+      _parent: unknown,
+      args: { id: string; name: string },
+      context: Context
+    ) => {
+      return context.prisma.folder.update({
+        where: {
+          id: args.id,
+        },
+        data: {
+          name: args.name,
+        },
+      });
+    },
+
+    deleteFolder: async (
+      _parent: unknown,
+      args: { id: string },
+      context: Context
+    ) => {
+      await context.prisma.folder.delete({
+        where: {
+          id: args.id,
+        },
+      });
+
+      return true;
+    },
+  },
+
   Folder: {
     bookmarks: (
       parent: { id: string },
