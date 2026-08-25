@@ -1,4 +1,6 @@
 import type { Context } from "../context";
+import { AppError } from "../errors";
+import { validateFolderName } from "../validators/folder.validator";
 
 export const folderResolvers = {
   Query: {
@@ -19,23 +21,34 @@ export const folderResolvers = {
       args: { id: string },
       context: Context
     ) => {
-      return context.prisma.folder.findUnique({
+      const folder = await context.prisma.folder.findUnique({
         where: {
           id: args.id,
         },
       });
+
+      if (!folder) {
+        throw new AppError(
+          "Folder not found",
+          "NOT_FOUND"
+        );
+      }
+
+      return folder;
     },
   },
 
-    Mutation: {
+  Mutation: {
     createFolder: async (
       _parent: unknown,
       args: { name: string },
       context: Context
     ) => {
+      const name = validateFolderName(args.name);
+
       return context.prisma.folder.create({
         data: {
-          name: args.name,
+          name,
         },
       });
     },
@@ -45,12 +58,27 @@ export const folderResolvers = {
       args: { id: string; name: string },
       context: Context
     ) => {
+      const name = validateFolderName(args.name);
+
+      const folder = await context.prisma.folder.findUnique({
+        where: {
+          id: args.id,
+        },
+      });
+
+      if (!folder) {
+        throw new AppError(
+          "Folder not found",
+          "NOT_FOUND"
+        );
+      }
+
       return context.prisma.folder.update({
         where: {
           id: args.id,
         },
         data: {
-          name: args.name,
+          name,
         },
       });
     },
@@ -60,6 +88,19 @@ export const folderResolvers = {
       args: { id: string },
       context: Context
     ) => {
+      const folder = await context.prisma.folder.findUnique({
+        where: {
+          id: args.id,
+        },
+      });
+
+      if (!folder) {
+        throw new AppError(
+          "Folder not found",
+          "NOT_FOUND"
+        );
+      }
+
       await context.prisma.folder.delete({
         where: {
           id: args.id,
